@@ -58,7 +58,7 @@ in rec {
             Needs to be writable by the user running the pihole container.
           '';
           default = defaultPiholeVolumesDir;
-          example = "/home/pihole-user/pihole-volumes";
+          example = "/var/lib/pihole-volumes";
         };
 
         dnsPort = mkOption {
@@ -344,6 +344,11 @@ in rec {
       Otherwise you can also set `services.pihole.hostConfig.suppressTmpDirWarning` to `true` to disable the warning.
     '');
 
+    # Ensure volumesPath directory exists with the right permissions
+    systemd.tmpfiles.rules = [
+      "d ${cfg.hostConfig.volumesPath} 0755 ${cfg.hostConfig.user} ${hostUserCfg.group} -"
+    ];
+    
     systemd.services."pihole-rootless-container" = {
       wantedBy = [ "multi-user.target" ];
       after = [ "network-online.target" ];
