@@ -24,7 +24,7 @@ with builtins; let
 
   toEnvValue = value:
     if isBool value then (if value then "true" else "false")
-    else if isList value then "[${concatStringSep ";" value}]"
+    else if isList value then "[${concatStringsSep ";" value}]"
     else value
   ;
 
