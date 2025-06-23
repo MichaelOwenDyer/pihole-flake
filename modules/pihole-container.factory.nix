@@ -36,18 +36,6 @@ in rec {
           '';
         };
 
-        enableLingeringForUser = mkOption {
-          type = with types; oneOf [ bool (enum [ "suppressWarning" ]) ];
-          description = ''
-            If true lingering (see `loginctl enable-linger`) is enabled for the host user running pihole.
-            This is necessary as otherwise starting the pihole container will fail if there is no active session for the host user.
-            If false a warning is printed during the build to remind you of the issue.
-
-            Set to "suppressWarning" if the issue is solved otherwise or does not apply.
-          '';
-          default = false;
-        };
-
         containerName = mkOption {
           type = types.str;
           description = ''
@@ -338,19 +326,15 @@ in rec {
   config = mkIf cfg.enable {
 
     assertions = [
-      { assertion = length hostUserCfg.subUidRanges > 0 && length hostUserCfg.subGidRanges > 0;
+      {
+        assertion = hostUserCfg.autoSubUidGidRange || length hostUserCfg.subUidRanges > 0 && length hostUserCfg.subGidRanges > 0;
         message = ''
           The host user most have configured subUidRanges & subGidRanges as pihole is running in a rootless podman container.
         '';
       }
     ];
 
-    warnings = (optional (cfg.hostConfig.enableLingeringForUser == false) ''
-      If lingering is not enabled for the host user which is running the pihole container then he service might be stopped when no user session is active.
-
-      Set `services.pihole.hostConfig.enableLingeringForUser` to `true` to manage systemd's linger setting through the `linger-flake` dependency.
-      Set it to "suppressWarning" if you manage lingering in a different way.
-    '') ++ (optional (!tmpDirIsResetAtBoot && !cfg.hostConfig.suppressTmpDirWarning) ''
+    warnings = (optional (!tmpDirIsResetAtBoot && !cfg.hostConfig.suppressTmpDirWarning) ''
       Rootless podman can leave traces in `/tmp` after shutdown which can break the startup of new containers at the next boot.
       See https://github.com/containers/podman/issues/4057 for details.
 
@@ -359,8 +343,6 @@ in rec {
       Enabling either of these disables this warning.
       Otherwise you can also set `services.pihole.hostConfig.suppressTmpDirWarning` to `true` to disable the warning.
     '');
-
-    users.users.${cfg.hostConfig.user}.linger = (cfg.hostConfig.enableLingeringForUser == true);
 
     systemd.services."pihole-rootless-container" = {
       wantedBy = [ "multi-user.target" ];
