@@ -19,7 +19,7 @@ let
 
   cfg = config.services.pihole;
   hostUserCfg = config.users.users.${cfg.hostConfig.user};
-  tmpDirIsResetAtBoot = config.boot.cleanTmpDir || config.boot.tmpOnTmpfs;
+  tmpDirIsResetAtBoot = config.boot.tmp.cleanOnBoot || config.boot.tmp.useTmpfs;
   systemTimeZone = config.time.timeZone;
   defaultPiholeVolumesDir = "${config.users.users.${cfg.hostConfig.user}.home}/pihole-volumes";
 in rec {
@@ -103,7 +103,7 @@ in rec {
             Set to `true` if you have taken precautions s.t. rootless podman does not leave traces in `/tmp`.
 
             Failing to do so can cause rootless podman to fail to start at reboot (see https://github.com/containers/podman/issues/4057).
-            If `boot.cleanTmpDir` or `boot.tmpOnTmpfs` is set then you do not have to set this option.
+            If `boot.tmp.cleanOnBoot` or `boot.tmp.useTmpfs` is set then you do not have to set this option.
           '';
           default = false;
         };
@@ -339,7 +339,7 @@ in rec {
       See https://github.com/containers/podman/issues/4057 for details.
 
       To avoid problems consider to clean `/tmp` of any left-overs from podman before the next startup.
-      The NixOS config options `boot.cleanTmpDir` or `boot.tmpOnTmpfs` can be helpful.
+      The NixOS config options `boot.tmp.cleanOnBoot` or `boot.tmp.useTmpfs` can be helpful.
       Enabling either of these disables this warning.
       Otherwise you can also set `services.pihole.hostConfig.suppressTmpDirWarning` to `true` to disable the warning.
     '');
