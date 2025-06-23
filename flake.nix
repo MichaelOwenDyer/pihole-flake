@@ -5,14 +5,9 @@
     nixpkgs.url = "nixpkgs/nixpkgs-unstable";
 
     flake-utils.url = "github:numtide/flake-utils";
-
-    linger = {
-      url = "github:mindsbackyard/linger-flake";
-      inputs.flake-utils.follows = "flake-utils";
-    };
   };
 
-  outputs = { self, nixpkgs, flake-utils, linger }: with flake-utils.lib; eachSystem (with system; [ x86_64-linux aarch64-linux ]) (curSystem:
+  outputs = { self, nixpkgs, flake-utils }: with flake-utils.lib; eachSystem (with system; [ x86_64-linux aarch64-linux ]) (curSystem:
     let
       pkgs = nixpkgs.legacyPackages.${curSystem};
 
@@ -31,7 +26,6 @@
 
       nixosModules.default = (import ./modules/pihole-container.factory.nix) {
         piholeFlake = self;
-        lingerFlake = linger;
       };
 
       devShells.default = let

@@ -1,4 +1,16 @@
-{ piholeFlake, lingerFlake }: { config, pkgs, lib, ... }: with lib; with builtins; let
+{
+  piholeFlake
+}:
+
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
+
+with lib; with builtins;
+let
   inherit (import ../lib/util.nix) extractContainerEnvVars extractContainerFTLEnvVars;
 
   mkContainerEnvOption = { envVar, ... }@optionAttrs:
@@ -10,7 +22,6 @@
   tmpDirIsResetAtBoot = config.boot.cleanTmpDir || config.boot.tmpOnTmpfs;
   systemTimeZone = config.time.timeZone;
   defaultPiholeVolumesDir = "${config.users.users.${cfg.hostConfig.user}.home}/pihole-volumes";
-
 in rec {
   options = {
     services.pihole = {
@@ -349,10 +360,7 @@ in rec {
       Otherwise you can also set `services.pihole.hostConfig.suppressTmpDirWarning` to `true` to disable the warning.
     '');
 
-    services.linger = mkIf (cfg.hostConfig.enableLingeringForUser == true) {
-      enable = true;
-      users = [ cfg.hostConfig.user ];
-    };
+    users.users.${cfg.hostConfig.user}.linger = (cfg.hostConfig.enableLingeringForUser == true);
 
     systemd.services."pihole-rootless-container" = {
       wantedBy = [ "multi-user.target" ];
